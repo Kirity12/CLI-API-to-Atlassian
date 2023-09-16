@@ -31,7 +31,7 @@ class TrelloApi(object):
         self._token = token
         self._query['token'] = token
 
-    def add_card(self, name, boardId, desc=None, idLabels=None):
+    def add_card(self, name, col_id, desc=None, idLabels=[]):
         
         url = self.url + "cards"
         query = {
@@ -39,8 +39,8 @@ class TrelloApi(object):
                 'token': self._token,
                 'name': name,
                 'desc': desc,
-                'idList': boardId,
-                'idLabels': ['6503765a59075ce50db4ac43','6503765a59075ce50db4ac47']
+                'idList': col_id,
+                'idLabels': idLabels if idLabels else None
                 }
         
         response = requests.request(
@@ -50,6 +50,32 @@ class TrelloApi(object):
                                     headers=self.headers,
                                     )
 
+        return self.raise_or_json(response)
+    
+    def add_label_to_card(self, card_id, idLabels):
+        
+        url = self.url + f"cards/{card_id}/idLabels"
+        
+        response = requests.request(
+                                    "POST",
+                                    url,
+                                    params=self._query,
+                                    headers=self.headers,
+                                    data={'value': idLabels}
+                                    )
+
+        return self.raise_or_json(response)
+    
+    def create_label(self,name, color, idBoard):
+
+        url = "https://trello.com/1/labels"
+
+        response = requests.request(
+                                    "POST",
+                                    url,
+                                    params=self._query,
+                                    data={"name": name, "color": color, "idBoard": idBoard})
+        
         return self.raise_or_json(response)
     
     def get_boards(self):
@@ -115,18 +141,24 @@ if __name__ == "__main__":
 
     board_id = "6503765a9dfc3faf1dc65d24"
     col_id = "6503765a250478954fb2c0f2"
+    card_id = "6503765bfb7d456f54dc96ae"
+    label_id = ["6503765a59075ce50db4ac43", "6503765a59075ce50db4ac47"]
 
     app = TrelloApi(API_KEY,TOKEN_KEY)
 
     st, obj = app.get_boards()
-    print(st, obj)
+    print(st)
     st, obj = app.get_columns(board_id)
     print(st)
     st, obj = app.get_labels(board_id)
-    print(st)
+    print(st, obj[1])
     st, obj = app.get_cards(board_id)
     print(st)
     st = app.get_token_url('NG')
     print(st)
-    st, obj = app.add_card('TEST', col_id, 'test')
+    st, obj = app.add_card('TEST', col_id, 'test', label_id)
+    print(st)
+    st, obj = app.add_label_to_card(card_id, label_id[1])
+    print(st)
+    st, obj = app.create_label('New', 'red', board_id)
     print(st)
