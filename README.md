@@ -18,21 +18,33 @@ To get started with the Trello CLI, follow these steps:
 
 ### Installation
 
-2. Open the terminal in the current directory and command:
+2. I've created a Python CLI project using the Poetry dependency management tool and the Typer library for building the CLI interface. Open the terminal in the current directory and command:
 
-    `~ pip install dist\trello_cli_service-0.1.0-py3-none-any.whl`
+        ~ pip install dist\trello_cli_service-0.1.0-py3-none-any.whl
+
+    Also install requirements.txt (for backup):
+
+        ~ pip install requirements.txt
 
 ### Execution
 
 3. Execute the command
 
-    `~ trello_cli_service`
+        ~ trello_cli_service
 
     Follow the on-screen prompts to select actions and perform operations on your Trello boards.
+
+## Backup Option to run the service
+
+Just incase the wheel is not istalled properly or the service is not working, we can still use the service
+just by running the python command on terminal. 
+
+    ~ python trello_cli_service\main.py
 
 ## Configuration
 
 Obtain your Trello API key by visiting Trello Developer API Keys and following the instructions.
+TO create a new API key, first create an account at Trello and the create a new API key at: https://trello.com/power-ups/admin
 
 You'll also need a token for read and write access to your Trello account. The CLI tool will guide you on how to generate this token.
 

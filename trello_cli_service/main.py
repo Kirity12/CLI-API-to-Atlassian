@@ -243,6 +243,7 @@ def add_labels(trello, card_id, board_id):
                        "failed for label {i+1}. Status: {status}")
     return resp
 
+
 def create_label(trello, board_id):
     "Process to take information to create a new label"
 
@@ -256,6 +257,7 @@ def create_label(trello, board_id):
         sys.exit(0)
 
     return response
+
 
 def perform_tasks(trello):
     "Perform tasks based on options given to user"
@@ -297,6 +299,7 @@ def perform_tasks(trello):
     if has_token:
         perform_tasks(trello)
 
+
 def get_all_labels_list(trello):
     "Display all labels in the current board"
 
@@ -309,6 +312,7 @@ def get_all_labels_list(trello):
             break
 
     get_labels(trello, boards[idx-1])
+
 
 def get_all_cards_list(trello):
     "Display all cards in the current board"
@@ -323,6 +327,7 @@ def get_all_cards_list(trello):
 
     get_cards(trello, boards[idx-1])
 
+
 def get_all_columns_list(trello):
     "Display all columns in the current board"
 
@@ -335,6 +340,7 @@ def get_all_columns_list(trello):
             break
 
     get_columns(trello, boards[idx-1])
+
 
 def add_new_label_to_board(trello):
     "Adds new label to the board selected by the user"
@@ -349,6 +355,7 @@ def add_new_label_to_board(trello):
     board_id = boards[idx-1]
 
     create_label(trello, board_id)
+
 
 def add_label_existing_card(trello):
     "Adds existing label to the card selected by the user"
@@ -371,6 +378,7 @@ def add_label_existing_card(trello):
             break
 
     add_labels(trello, cards[idx-1], board_id)
+
 
 def add_card_to_board(trello):
     "Adds new card to the board selected by the user"
