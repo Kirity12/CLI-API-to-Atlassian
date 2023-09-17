@@ -1,7 +1,8 @@
 "Main fuction of the CLI service"
 import sys
+import importlib.util
+from pathlib import Path
 import typer
-from trello_api import TrelloApi
 
 
 app = typer.Typer()
@@ -23,13 +24,29 @@ def welcome_message():
     typer.echo(intro)
 
 
+def import_trello_hard():
+    "typer doesn't support import of external files and thus hard imports"
+
+    module_path = str(Path('.').resolve()) + '\\trello_api.py'
+    sys.path.append(str(Path('.').resolve()))
+    spec = importlib.util.spec_from_file_location(module_path, module_path)
+    module = importlib.util.module_from_spec(spec)
+    # HACK(dirty) : add local path to allow siblings import
+    spec.loader.exec_module(module)
+    # Restore previous state
+    sys.path.pop(-1)
+    return module
+
+
 def establish_connection():
     "Take user authentication and verify to Trello connection"
 
     # Step 2: Ask for the user's API key
     api_key: str = typer.prompt("Please enter your API key:")
 
-    trello = TrelloApi(api_key)
+    trello_module = import_trello_hard()
+
+    trello = trello_module.TrelloApi(api_key)
 
     # Step 3: Check if the user has the required token
     has_token = typer.confirm("Do you have the required token for the read/write operation?")
@@ -72,7 +89,7 @@ def get_read_write_action():
     return action
 
 
-def get_boards(trello: TrelloApi):
+def get_boards(trello):
     "Display all boards as list accessible to user"
 
     status, response = trello.get_boards()
@@ -240,7 +257,7 @@ def create_label(trello, board_id):
 
     return response
 
-def perform_tasks(trello: TrelloApi):
+def perform_tasks(trello):
     "Perform tasks based on options given to user"
 
     # Step 7 : Give options for task to be performed
@@ -386,7 +403,12 @@ def goodbye_message():
 
 @app.command()
 def main():
-    "Start the service"
+    '''
+    This is CLI service does the following operations:
+
+            1. Create a new card (with or without labels) for a given column in the board\n
+            2. Create a new label separately (later can be added to a card)
+    '''
 
     welcome_message()
 
@@ -398,4 +420,5 @@ def main():
 
 
 if __name__ == "__main__":
+
     app()
