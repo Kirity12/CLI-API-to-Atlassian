@@ -1,12 +1,15 @@
+"Define Trello API"
 import json
-from requests.utils import quote
 import requests
+from requests.utils import quote
 
 
 API_KEY = "26dea0c6d8f4574827f3e06654ab5102"
 TOKEN_KEY = "ATTA0c9670fe99c679e661aeef28cd9275b160270a70dff5e00fc4cd516fe1f321ef059D598F"
 
-class TrelloApi(object):
+class TrelloApi():
+    'Performs API requests to Trello for performing various operations'
+
     def __init__(self, apikey, token=None):
         self._apikey = apikey
         self._token = token
@@ -20,6 +23,8 @@ class TrelloApi(object):
         self.url = "https://api.trello.com/1/"
 
     def raise_or_json(self, resp):
+        "ggat the status code and json response"
+
         status = resp.status_code
         if status==200:
             obj = json.loads(resp.text)
@@ -28,11 +33,14 @@ class TrelloApi(object):
         return status, obj
 
     def set_token(self, token):
+        "Set the token"
+
         self._token = token
         self._query['token'] = token
 
-    def add_card(self, name, col_id, desc=None, idLabels=[]):
-        
+    def add_card(self, name, col_id, desc=None, id_labels=None):
+        "Create new card id along with necessary info json on the given board id"
+
         url = self.url + "cards"
         query = {
                 'key': self._apikey,
@@ -40,33 +48,37 @@ class TrelloApi(object):
                 'name': name,
                 'desc': desc,
                 'idList': col_id,
-                'idLabels': idLabels if idLabels else None
+                'idLabels': id_labels
                 }
-        
+
         response = requests.request(
                                     "POST",
                                     url,
                                     params=query,
                                     headers=self.headers,
+                                    timeout=10
                                     )
 
         return self.raise_or_json(response)
-    
-    def add_label_to_card(self, card_id, idLabels):
-        
+
+    def add_label_to_card(self, card_id, id_labels):
+        "Add label to a card id in the given board id"
+
         url = self.url + f"cards/{card_id}/idLabels"
-        
+
         response = requests.request(
                                     "POST",
                                     url,
                                     params=self._query,
                                     headers=self.headers,
-                                    data={'value': idLabels}
+                                    data={'value': id_labels},
+                                    timeout=10
                                     )
 
         return self.raise_or_json(response)
-    
-    def create_label(self,name, color, idBoard):
+
+    def create_label(self,name, color, id_board):
+        "Create new labels json on the given board id"
 
         url = "https://trello.com/1/labels"
 
@@ -74,35 +86,44 @@ class TrelloApi(object):
                                     "POST",
                                     url,
                                     params=self._query,
-                                    data={"name": name, "color": color, "idBoard": idBoard})
-        
+                                    data={"name": name, "color": color, "idBoard": id_board},
+                                    timeout=10
+                                    )
+
         return self.raise_or_json(response)
-    
+
     def get_boards(self):
+        "Get Boards json for trello id"
+
         url = self.url + "/members/me/boards"
 
         response = requests.request(
                                     "GET",
                                     url,
                                     params=self._query,
-                                    headers=self.headers
+                                    headers=self.headers,
+                                    timeout=10
                                     )
 
         return self.raise_or_json(response)
-    
+
     def get_columns(self, board_id):
+        "Get Columns json based on the given board id"
+
         url = self.url + f"boards/{board_id}/lists"
 
         response = requests.request(
                                     "GET",
                                     url,
                                     params=self._query,
-                                    headers=self.headers
+                                    headers=self.headers,
+                                    timeout=10
                                     )
 
         return self.raise_or_json(response)
-    
+
     def get_labels(self, board_id):
+        "Get Labels json based on the given board id"
 
         url = self.url + f"boards/{board_id}/labels"
 
@@ -110,12 +131,14 @@ class TrelloApi(object):
                                     "GET",
                                     url,
                                     params=self._query,
-                                    headers=self.headers
+                                    headers=self.headers,
+                                    timeout=10
                                     )
 
         return self.raise_or_json(response)
-    
+
     def get_cards(self, board_id):
+        "Get card json based on the given board id"
 
         url = self.url + f"boards/{board_id}/cards"
 
@@ -123,42 +146,18 @@ class TrelloApi(object):
                                     "GET",
                                     url,
                                     params=self._query,
-                                    headers=self.headers
+                                    headers=self.headers,
+                                    timeout=10
                                     )
 
         return self.raise_or_json(response)
-    
-    def get_token_url(self, app_name, expires='30days', write_access=True):
+
+    def get_token_url(self, app_name, expires='1day', write_access=True):
+        "Crete URL temporary link for the user to generate token"
+
         url = f"https://trello.com/1/authorize?key={API_KEY}&"
         url+= f"name={quote(app_name)}&"
         url+= f"expiration={expires}&"
-        url+= f"response_type=token&"
+        url+= "response_type=token&"
         url+= f"scope={'read,write' if write_access else 'read'}"
         return url
-
-
-if __name__ == "__main__":
-
-    board_id = "6503765a9dfc3faf1dc65d24"
-    col_id = "6503765a250478954fb2c0f2"
-    card_id = "6503765bfb7d456f54dc96ae"
-    label_id = ["6503765a59075ce50db4ac43", "6503765a59075ce50db4ac47"]
-
-    app = TrelloApi(API_KEY,TOKEN_KEY)
-
-    st, obj = app.get_boards()
-    print(st)
-    st, obj = app.get_columns(board_id)
-    print(st)
-    st, obj = app.get_labels(board_id)
-    print(st, obj[1])
-    st, obj = app.get_cards(board_id)
-    print(st)
-    st = app.get_token_url('NG')
-    print(st)
-    st, obj = app.add_card('TEST', col_id, 'test', label_id)
-    print(st)
-    st, obj = app.add_label_to_card(card_id, label_id[1])
-    print(st)
-    st, obj = app.create_label('New', 'red', board_id)
-    print(st)
