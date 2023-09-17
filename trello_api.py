@@ -4,9 +4,6 @@ import requests
 from requests.utils import quote
 
 
-API_KEY = "26dea0c6d8f4574827f3e06654ab5102"
-TOKEN_KEY = "ATTA0c9670fe99c679e661aeef28cd9275b160270a70dff5e00fc4cd516fe1f321ef059D598F"
-
 class TrelloApi():
     'Performs API requests to Trello for performing various operations'
 
@@ -155,7 +152,7 @@ class TrelloApi():
     def get_token_url(self, app_name, expires='1day', write_access=True):
         "Crete URL temporary link for the user to generate token"
 
-        url = f"https://trello.com/1/authorize?key={API_KEY}&"
+        url = f"https://trello.com/1/authorize?key={self._apikey}&"
         url+= f"name={quote(app_name)}&"
         url+= f"expiration={expires}&"
         url+= "response_type=token&"
