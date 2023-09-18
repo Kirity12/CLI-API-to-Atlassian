@@ -3,7 +3,7 @@ import sys
 import importlib.util
 from pathlib import Path
 import typer
-
+import os 
 
 app = typer.Typer()
 
@@ -27,11 +27,11 @@ def welcome_message():
 def import_trello_hard():
     "typer doesn't support import of external files and thus hard imports"
 
-    module_path = str(Path('.').resolve()) + '\\trello_api.py'
-    sys.path.append(str(Path('.').resolve()))
+    module_path = str(os.path.dirname(os.path.realpath(__file__))) + '\\trello_api.py'
+    sys.path.append(str(os.path.dirname(os.path.realpath(__file__))))
     spec = importlib.util.spec_from_file_location(module_path, module_path)
     module = importlib.util.module_from_spec(spec)
-    # HACK(dirty) : add local path to allow siblings import
+    # HACK(dirty) : add local path to allow trello import
     spec.loader.exec_module(module)
     # Restore previous state
     sys.path.pop(-1)
