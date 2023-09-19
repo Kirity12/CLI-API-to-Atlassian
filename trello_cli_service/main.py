@@ -38,31 +38,31 @@ def import_trello_hard():
     return module
 
 
-def establish_connection():
+def verify_user_credentials():
     "Take user authentication and verify to Trello connection"
 
-    # Step 2: Ask for the user's API key
+    # Ask for the user's API key
     api_key: str = typer.prompt("Please enter your API key:")
 
     trello_module = import_trello_hard()
 
     trello = trello_module.TrelloApi(api_key)
 
-    # Step 3: Check if the user has the required token
+    # Check if the user has the required token
     has_token = typer.confirm("Do you have the required token for the read/write operation?")
 
     if not has_token:
 
-        # Step 4: Give options for actions: read or write
+        # Give options for actions: read or write
         action = get_read_write_action()
 
-        # Step 5: Provide the URL to create the token if not present
+        # Provide the URL to create the token if not present
         typer.echo('Please create the token using the following link:\n')
         typer.echo(trello.get_token_url('temp',write_access=bool(action-1)))
 
     token: str = typer.prompt("\nPlease enter your token:")
 
-    # Step 6 : Establish connection using the API key and token
+    # Establish connection using the API key and token
     typer.echo(f"Verifying connection with API using API key: {api_key} and token: {token}")
     trello.set_token(token)
 
@@ -183,7 +183,7 @@ def add_card(trello, columns_id, board_id):
     while flag:
         all_labels = get_labels(trello, board_id)
         selected_labels = typer.prompt("\nWrite the indexes of all the labels "
-                                       "(separated by ',')[0-{len(all_labels)}], 0 being None::")
+                                       f"(separated by ',')[0-{len(all_labels)}], 0 being None::")
         selected_labels = selected_labels.split(',')
         selected_labels = [int(label)-1 for label in selected_labels]
         for i, label in enumerate(selected_labels):
@@ -216,7 +216,7 @@ def add_labels(trello, card_id, board_id):
     while flag:
         all_labels = get_labels(trello, board_id)
         selected_labels = typer.prompt("Write the idx of all the labels "
-                                       "(separated by ',')[0-{len(all_labels)}], 0 being None::")
+                                       f"(separated by ',')[0-{len(all_labels)}], 0 being None::")
         selected_labels = selected_labels.split(',')
         selected_labels = [int(label)-1 for label in selected_labels]
         for i, label in enumerate(selected_labels):
@@ -262,7 +262,7 @@ def create_label(trello, board_id):
 def perform_tasks(trello):
     "Perform tasks based on options given to user"
 
-    # Step 7 : Give options for task to be performed
+    # Give options for task to be performed
     while True:
         typer.echo("\nSelect an action for type of operation to be performed ([1-7]):")
         action: int = int(typer.prompt("1. Add Cards\n2. Add Existing Labels to a Card\n"
@@ -420,7 +420,7 @@ def main():
 
     welcome_message()
 
-    trello = establish_connection()
+    trello = verify_user_credentials()
 
     perform_tasks(trello)
 
