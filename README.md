@@ -14,23 +14,39 @@ This Command Line Interface (CLI) tool allows you to interact with Trello boards
 
 To get started with the Trello CLI, follow these steps:
 
-1. Navigate to the project directory
+1. Untar the tar.gz file and navigate to the project directory.
+        
+        ~ tar -xvzf directory_name.tar.gz
+        ~ cd directory_name
 
 ### Installation
 
-2. I've created a Python CLI project using the Poetry dependency management tool and the Typer library for building the CLI interface. Open the terminal in the current directory and command:
+2. First and foremost lets create a virtual environment. Ive used Python 3.9.7 for this project. To install Python 3.9 and 
+venv on Ubuntu please refer: https://tellor.io/blog/how-to-install-python-3-9-and-venv-on-ubuntu
+
+    2.1. Create virtual environment and activate it.
+
+        ~ python3 -m venv canonical_assessment
+        ~ source canonical_assessment/bin/activate  
+    
+    incase of windows
+
+        ~ canonical_assessment/Scripts/activate
+
+    2.2. Now navigate to CodingAPI directory and install requirements.txt:
+
+        ~ cd CodingAPI/
+        ~ pip install requirements.txt
+
+3. I've created this Python CLI project using the Poetry dependency management tool and the Typer library for building the CLI interface. Now run the command:
 
         ~ pip install dist\trello_cli_service-0.1.0-py3-none-any.whl
 
-    Also install requirements.txt (for backup):
-
-        ~ pip install requirements.txt
-
 ### Execution
 
-3. Execute the command
+4. Execute the command
 
-        ~ trello_cli_service
+        ~ trello-cli-service
 
     Follow the on-screen prompts to select actions and perform operations on your Trello boards.
 
@@ -44,7 +60,7 @@ just by running the python command on terminal.
 ## Configuration
 
 Obtain your Trello API key by visiting Trello Developer API Keys and following the instructions.
-TO create a new API key, first create an account at Trello and the create a new API key at: https://trello.com/power-ups/admin
+To create a new API key, first create an account at Trello and the create a new API key at: https://trello.com/power-ups/admin
 
 You'll also need a token for read and write access to your Trello account. The CLI tool will guide you on how to generate this token.
 

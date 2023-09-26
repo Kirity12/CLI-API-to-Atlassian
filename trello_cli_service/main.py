@@ -1,7 +1,6 @@
 "Main fuction of the CLI service"
 import sys
 import importlib.util
-from pathlib import Path
 import typer
 import os 
 
@@ -27,7 +26,7 @@ def welcome_message():
 def import_trello_hard():
     "typer doesn't support import of external files and thus hard imports"
 
-    module_path = str(os.path.dirname(os.path.realpath(__file__))) + '\\trello_api.py'
+    module_path = str(os.path.join((os.path.dirname(os.path.realpath(__file__))), 'trello_api.py'))
     sys.path.append(str(os.path.dirname(os.path.realpath(__file__))))
     spec = importlib.util.spec_from_file_location(module_path, module_path)
     module = importlib.util.module_from_spec(spec)
@@ -42,7 +41,7 @@ def verify_user_credentials():
     "Take user authentication and verify to Trello connection"
 
     # Ask for the user's API key
-    api_key: str = typer.prompt("Please enter your API key:")
+    api_key = typer.prompt("Please enter your API key:")
 
     trello_module = import_trello_hard()
 
@@ -71,7 +70,8 @@ def verify_user_credentials():
         typer.echo("Connection verified. Status: 200")
     else:
         typer.echo(f"Connection failed. Status: {status}")
-        sys.exit()
+        typer.echo(f"\nRe-enter the credentials")
+        verify_user_credentials()
 
     return trello
 
@@ -79,13 +79,16 @@ def get_read_write_action():
     "Action index if user wants to perform a read or write operation"
 
     while True:
-        typer.echo("\nSelect an action for type of operation to be performed ([1-2]):")
-        action: int = int(typer.prompt("1. Perform Read operation \n"
-                                       "2. Perform Update/Add Operation\n\n"))
-        if (1>action or action>=3):
-            typer.echo('Invalid action')
-        else:
-            break
+        try:
+            typer.echo("\nSelect an action for type of operation to be performed ([1-2]):")
+            action: int = int(typer.prompt("1. Perform Read operation \n"
+                                        "2. Perform Update/Add Operation\n\n"))
+            if (1>action or action>=3):
+                typer.echo('\nInvalid action')
+            else:
+                break
+        except  ValueError or IndexError:
+            typer.echo('\nInvalid action')
     return action
 
 
@@ -181,18 +184,21 @@ def add_card(trello, columns_id, board_id):
     description: str = typer.prompt("\nDescription of the card:")
     flag= True
     while flag:
-        all_labels = get_labels(trello, board_id)
-        selected_labels = typer.prompt("\nWrite the indexes of all the labels "
-                                       f"(separated by ',')[0-{len(all_labels)}], 0 being None::")
-        selected_labels = selected_labels.split(',')
-        selected_labels = [int(label)-1 for label in selected_labels]
-        for i, label in enumerate(selected_labels):
-            selected_labels[i] = int(label)
-            flag = flag and (0<=int(label)<=len(all_labels))
+        try: 
+            all_labels = get_labels(trello, board_id)
+            selected_labels = typer.prompt("\nWrite the indexes of all the labels "
+                                        f"(separated by ',')[0-{len(all_labels)}]::")
+            selected_labels = selected_labels.split(',')
+            selected_labels = [int(label)-1 for label in selected_labels]
+            for i, label in enumerate(selected_labels):
+                selected_labels[i] = int(label)
+                flag = flag and (0<=int(label)<=len(all_labels))
 
-        flag = not flag
-        if flag:
-            typer.echo("Invalid label indexes. Re-enter indexes to continue")
+            flag = not flag
+            if flag:
+                typer.echo("\nInvalid label indexes. Re-enter indexes to continue")
+        except  ValueError or IndexError:
+            typer.echo("\nInvalid label indexes. Re-enter indexes to continue")
 
     if -1 in selected_labels:
         id_list = []
@@ -214,18 +220,21 @@ def add_labels(trello, card_id, board_id):
 
     flag= True
     while flag:
-        all_labels = get_labels(trello, board_id)
-        selected_labels = typer.prompt("Write the idx of all the labels "
-                                       f"(separated by ',')[0-{len(all_labels)}], 0 being None::")
-        selected_labels = selected_labels.split(',')
-        selected_labels = [int(label)-1 for label in selected_labels]
-        for i, label in enumerate(selected_labels):
-            selected_labels[i] = int(label)
-            flag &= (0<=int(label)<=len(all_labels))
+        try:
+            all_labels = get_labels(trello, board_id)
+            selected_labels = typer.prompt("Write the idx of all the labels "
+                                        f"(separated by ',')[0-{len(all_labels)}]::")
+            selected_labels = selected_labels.split(',')
+            selected_labels = [int(label)-1 for label in selected_labels]
+            for i, label in enumerate(selected_labels):
+                selected_labels[i] = int(label)
+                flag &= (0<=int(label)<=len(all_labels))
 
-        flag = not flag
-        if flag:
-            typer.echo("Invalid label indexes. Re-enter indexes to continue")
+            flag = not flag
+            if flag:
+                typer.echo("\nInvalid label indexes. Re-enter indexes to continue")
+        except  ValueError or IndexError:
+            typer.echo("\nInvalid label indexes. Re-enter indexes to continue")
 
     if -1 in selected_labels:
         id_list = []
@@ -237,7 +246,7 @@ def add_labels(trello, card_id, board_id):
         status, response = trello.add_label_to_card(card_id, id_)
         resp.append((status, response))
         if status == 200:
-            typer.echo(f"label with {i+1} added successfuly. Status: 200")
+            typer.echo(f"label with index {i+1} added successfuly. Status: 200")
         else:
             typer.echo("Label already presen or connection "
                        "failed for label {i+1}. Status: {status}")
@@ -264,14 +273,17 @@ def perform_tasks(trello):
 
     # Give options for task to be performed
     while True:
-        typer.echo("\nSelect an action for type of operation to be performed ([1-7]):")
-        action: int = int(typer.prompt("1. Add Cards\n2. Add Existing Labels to a Card\n"
-                                       "3. Create New Labels in Board\n\n4. Get Boards\n"
-                                       "5. Get Columns\n6. Get Cards\n7. Get Labels\n\n"))
-        if 1>action or action>=8:
-            typer.echo('Invalid action')
-        else:
-            break
+        try:
+            typer.echo("\nSelect an action for type of operation to be performed ([1-7]):")
+            action: int = int(typer.prompt("1. Add Cards\n2. Add Existing Labels to a Card\n"
+                                        "3. Create New Labels in Board\n\n4. Get Boards\n"
+                                        "5. Get Columns\n6. Get Cards\n7. Get Labels\n\n"))
+            if 1>action or action>=8:
+                typer.echo('\nInvalid action')
+            else:
+                break
+        except  ValueError or IndexError:
+            typer.echo('\nInvalid action')
 
     if action==1:
         add_card_to_board(trello)
@@ -305,11 +317,14 @@ def get_all_labels_list(trello):
 
     boards = get_boards(trello)
     while True:
-        idx: int = int(typer.prompt(f"\nSelect the board ([1-{len(boards)}]):"))
-        if 1>idx or idx>len(boards):
-            typer.echo('Invalid input')
-        else:
-            break
+        try:
+            idx: int = int(typer.prompt(f"\nSelect the board ([1-{len(boards)}]):"))
+            if 1>idx or idx>len(boards):
+                typer.echo('Invalid input')
+            else:
+                break
+        except  ValueError or IndexError:
+            typer.echo('\nInvalid action')
 
     get_labels(trello, boards[idx-1])
 
@@ -319,11 +334,14 @@ def get_all_cards_list(trello):
 
     boards = get_boards(trello)
     while True:
-        idx: int = int(typer.prompt(f"\nSelect the board ([1-{len(boards)}]):"))
-        if 1>idx or idx>len(boards):
-            typer.echo('Invalid input')
-        else:
-            break
+        try:
+            idx: int = int(typer.prompt(f"\nSelect the board ([1-{len(boards)}]):"))
+            if 1>idx or idx>len(boards):
+                typer.echo('Invalid input')
+            else:
+                break
+        except  ValueError or IndexError:
+            typer.echo('\nInvalid action')
 
     get_cards(trello, boards[idx-1])
 
@@ -333,11 +351,14 @@ def get_all_columns_list(trello):
 
     boards = get_boards(trello)
     while True:
-        idx: int = int(typer.prompt(f"\nSelect the board ([1-{len(boards)}]):"))
-        if 1>idx or idx>len(boards):
-            typer.echo('Invalid input')
-        else:
-            break
+        try:
+            idx: int = int(typer.prompt(f"\nSelect the board ([1-{len(boards)}]):"))
+            if 1>idx or idx>len(boards):
+                typer.echo('Invalid input')
+            else:
+                break
+        except  ValueError or IndexError:
+            typer.echo('\nInvalid action')
 
     get_columns(trello, boards[idx-1])
 
@@ -347,11 +368,14 @@ def add_new_label_to_board(trello):
 
     boards = get_boards(trello)
     while True:
-        idx: int = int(typer.prompt(f"\nSelect the board ([1-{len(boards)}]):"))
-        if 1>idx or idx>len(boards):
-            typer.echo('Invalid input')
-        else:
-            break
+        try:
+            idx: int = int(typer.prompt(f"\nSelect the board ([1-{len(boards)}]):"))
+            if 1>idx or idx>len(boards):
+                typer.echo('Invalid input')
+            else:
+                break
+        except  ValueError or IndexError:
+            typer.echo('\nInvalid action')
     board_id = boards[idx-1]
 
     create_label(trello, board_id)
@@ -362,20 +386,26 @@ def add_label_existing_card(trello):
 
     boards = get_boards(trello)
     while True:
-        idx: int = int(typer.prompt(f"\nSelect the board ([1-{len(boards)}]):"))
-        if 1>idx or idx>len(boards):
-            typer.echo('Invalid input')
-        else:
-            break
+        try:
+            idx: int = int(typer.prompt(f"\nSelect the board ([1-{len(boards)}]):"))
+            if 1>idx or idx>len(boards):
+                typer.echo('Invalid input')
+            else:
+                break
+        except  ValueError or IndexError:
+            typer.echo('\nInvalid action')
     board_id = boards[idx-1]
 
     cards = get_cards(trello, boards[idx-1])
     while True:
-        idx: int = int(typer.prompt(f"\nSelect the Card ([1-{len(cards)}]):"))
-        if 1>idx or idx>len(cards):
-            typer.echo('Invalid input')
-        else:
-            break
+        try:
+            idx: int = int(typer.prompt(f"\nSelect the Card ([1-{len(cards)}]):"))
+            if 1>idx or idx>len(cards):
+                typer.echo('Invalid input')
+            else:
+                break
+        except  ValueError or IndexError:
+            typer.echo('\nInvalid action')
 
     add_labels(trello, cards[idx-1], board_id)
 
@@ -385,21 +415,27 @@ def add_card_to_board(trello):
 
     boards = get_boards(trello)
     while True:
-        idx: int = int(typer.prompt(f"\nSelect the board ([1-{len(boards)}]):"))
-        if 1>idx or idx>len(boards):
-            typer.echo('Invalid input')
-        else:
-            break
+        try:
+            idx: int = int(typer.prompt(f"\nSelect the board ([1-{len(boards)}]):"))
+            if 1>idx or idx>len(boards):
+                typer.echo('Invalid input')
+            else:
+                break
+        except  ValueError or IndexError:
+            typer.echo('\nInvalid action')
 
     board_id = boards[idx-1]
 
     columns = get_columns(trello, board_id)
     while True:
-        idx: int = int(typer.prompt(f"\nSelect the column ([1-{len(columns)}]):"))
-        if 1>idx or idx>len(columns):
-            typer.echo('Invalid input')
-        else:
-            break
+        try:
+            idx: int = int(typer.prompt(f"\nSelect the column ([1-{len(columns)}]):"))
+            if 1>idx or idx>len(columns):
+                typer.echo('Invalid input')
+            else:
+                break
+        except  ValueError or IndexError:
+            typer.echo('\nInvalid action')
 
     add_card(trello, columns[idx-1], board_id)
 

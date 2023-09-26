@@ -1,3 +1,1 @@
-poetry==1.6.1
-typer==0.9.0
-typer-cli==0.0.13
+requests
