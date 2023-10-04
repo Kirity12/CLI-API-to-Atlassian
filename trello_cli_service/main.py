@@ -47,31 +47,32 @@ def verify_user_credentials():
 
     trello = trello_module.TrelloApi(api_key)
 
-    # Check if the user has the required token
-    has_token = typer.confirm("Do you have the required token for the read/write operation?")
+    while True:
+        # Check if the user has the required token
+        has_token = typer.confirm("Do you have the required token for the read/write operation?")
 
-    if not has_token:
+        if not has_token:
 
-        # Give options for actions: read or write
-        action = get_read_write_action()
+            # Give options for actions: read or write
+            action = get_read_write_action()
 
-        # Provide the URL to create the token if not present
-        typer.echo('Please create the token using the following link:\n')
-        typer.echo(trello.get_token_url('temp',write_access=bool(action-1)))
+            # Provide the URL to create the token if not present
+            typer.echo('Please create the token using the following link:\n')
+            typer.echo(trello.get_token_url('temp',write_access=bool(action-1)))
 
-    token: str = typer.prompt("\nPlease enter your token:")
+        token: str = typer.prompt("\nPlease enter your token:")
 
-    # Establish connection using the API key and token
-    typer.echo(f"Verifying connection with API using API key: {api_key} and token: {token}")
-    trello.set_token(token)
+        # Establish connection using the API key and token
+        typer.echo(f"Verifying connection with API using API key: {api_key} and token: {token}")
+        trello.set_token(token)
 
-    status, _ = trello.get_boards()
-    if status == 200:
-        typer.echo("Connection verified. Status: 200")
-    else:
-        typer.echo(f"Connection failed. Status: {status}")
-        typer.echo(f"\nRe-enter the credentials")
-        verify_user_credentials()
+        status, _ = trello.get_boards()
+        if status == 200:
+            typer.echo("Connection verified. Status: 200")
+            break
+        else:
+            typer.echo(f"Connection failed. Status: {status}")
+            typer.echo(f"\nRe-enter the credentials")
 
     return trello
 
@@ -182,6 +183,19 @@ def add_card(trello, columns_id, board_id):
 
     name: str = typer.prompt("\nName of the card:")
     description: str = typer.prompt("\nDescription of the card:")
+    id_list = get_selected_labels_list(trello, board_id)
+
+    status, response = trello.add_card(name, columns_id, description, id_list)
+    if status == 200:
+        typer.echo("Card added successfuly. Status: 200")
+    else:
+        typer.echo(f"Connection failed. Status: {status}")
+        sys.exit()
+
+    return response
+
+
+def get_selected_labels_list(trello, board_id):
     flag= True
     while flag:
         try: 
@@ -204,42 +218,13 @@ def add_card(trello, columns_id, board_id):
         id_list = []
     else:
         id_list = [all_labels[i] for i in selected_labels]
-
-    status, response = trello.add_card(name, columns_id, description, id_list)
-    if status == 200:
-        typer.echo("Card added successfuly. Status: 200")
-    else:
-        typer.echo(f"Connection failed. Status: {status}")
-        sys.exit()
-
-    return response
+    return id_list
 
 
 def add_labels(trello, card_id, board_id):
     "Process to take information about label and add it to appropriate card"
 
-    flag= True
-    while flag:
-        try:
-            all_labels = get_labels(trello, board_id)
-            selected_labels = typer.prompt("Write the idx of all the labels "
-                                        f"(separated by ',')[0-{len(all_labels)}]::")
-            selected_labels = selected_labels.split(',')
-            selected_labels = [int(label)-1 for label in selected_labels]
-            for i, label in enumerate(selected_labels):
-                selected_labels[i] = int(label)
-                flag &= (0<=int(label)<=len(all_labels))
-
-            flag = not flag
-            if flag:
-                typer.echo("\nInvalid label indexes. Re-enter indexes to continue")
-        except  ValueError or IndexError:
-            typer.echo("\nInvalid label indexes. Re-enter indexes to continue")
-
-    if -1 in selected_labels:
-        id_list = []
-    else:
-        id_list = [(i, all_labels[i]) for i in selected_labels]
+    id_list = get_selected_labels_list(trello, board_id)
 
     resp = []
     for i, id_ in id_list:
@@ -270,49 +255,59 @@ def create_label(trello, board_id):
 
 def perform_tasks(trello):
     "Perform tasks based on options given to user"
+    
+    has_token = True
 
-    # Give options for task to be performed
-    while True:
-        try:
-            typer.echo("\nSelect an action for type of operation to be performed ([1-7]):")
-            action: int = int(typer.prompt("1. Add Cards\n2. Add Existing Labels to a Card\n"
-                                        "3. Create New Labels in Board\n\n4. Get Boards\n"
-                                        "5. Get Columns\n6. Get Cards\n7. Get Labels\n\n"))
-            if 1>action or action>=8:
+    while has_token:
+
+        # Give options for task to be performed
+        while True:
+            try:
+                typer.echo("\nSelect an action for type of operation to be performed ([1-7]):")
+                action: int = int(typer.prompt("1. Add Cards\n2. Add Existing Labels to a Card\n"
+                                            "3. Create New Labels in Board\n\n4. Get Boards\n"
+                                            "5. Get Columns\n6. Get Cards\n7. Get Labels\n\n0. Exit"))
+                if 1>action or action>=8:
+                    typer.echo('\nInvalid action')
+                else:
+                    break
+            except  ValueError or IndexError:
                 typer.echo('\nInvalid action')
-            else:
-                break
-        except  ValueError or IndexError:
-            typer.echo('\nInvalid action')
 
-    if action==1:
-        add_card_to_board(trello)
+        if action==1:
+            add_card_to_board(trello)
 
-    elif action==2:
-        add_label_existing_card(trello)
+        elif action==2:
+            add_label_existing_card(trello)
 
-    elif action==3:
-        add_new_label_to_board(trello)
+        elif action==3:
+            add_new_label_to_board(trello)
 
-    elif action==4:
-        _ = get_boards(trello)
+        elif action==4:
+            _ = get_boards(trello)
 
-    elif action==5:
-        get_all_columns_list(trello)
+        elif action==5:
+            display_columns_list(trello)
 
-    elif action==6:
-        get_all_cards_list(trello)
+        elif action==6:
+            display_cards_list(trello)
 
-    else:
-        get_all_labels_list(trello)
+        elif action==7:
+            display_labels_list(trello)
 
-    has_token = typer.confirm("\nDo you to continue doing operations?")
+        elif action==0:
+            pass
 
-    if has_token:
-        perform_tasks(trello)
+        else:
+            typer.echo('Incorrect action')
+
+        has_token = typer.confirm("\nDo you want to continue doing operations?")
+
+        if not has_token:
+            break
 
 
-def get_all_labels_list(trello):
+def display_labels_list(trello):
     "Display all labels in the current board"
 
     boards = get_boards(trello)
@@ -329,7 +324,7 @@ def get_all_labels_list(trello):
     get_labels(trello, boards[idx-1])
 
 
-def get_all_cards_list(trello):
+def display_cards_list(trello):
     "Display all cards in the current board"
 
     boards = get_boards(trello)
@@ -346,7 +341,7 @@ def get_all_cards_list(trello):
     get_cards(trello, boards[idx-1])
 
 
-def get_all_columns_list(trello):
+def display_columns_list(trello):
     "Display all columns in the current board"
 
     boards = get_boards(trello)
