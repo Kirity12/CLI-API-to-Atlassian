@@ -1,1 +1,6 @@
 requests
+typer
+pytest
+pylint
+poetry
+flake8
