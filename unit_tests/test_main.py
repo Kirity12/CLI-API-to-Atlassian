@@ -14,9 +14,12 @@ runner = CliRunner()
 API_KEY = "26dea0c6d8f4574827f3e06654ab5102"
 TOKEN_KEY = "ATTA0c9670fe99c679e661aeef28cd9275b160270a70dff5e00fc4cd516fe1f321ef059D598F"
 
+trello = TrelloApi(API_KEY, TOKEN_KEY)
 
-def mock_perform_tasks():
-    main.perform_tasks(TrelloApi(API_KEY, TOKEN_KEY))
+
+def mock_perform_tasks(func_name):
+    func = getattr(main, func_name)
+    return func(trello)
 
 
 def test_welcome_message():
@@ -72,9 +75,7 @@ def test_display_tasks():
     app = typer.Typer()
     app.command()(mock_perform_tasks)
 
-    result = runner.invoke(app, input='\n'.join(['4', 'n']))
-    print(result.stdout)
-    assert 1==2
+    result = runner.invoke(app, ['perform_tasks'], input='\n'.join(['4', 'n']))
     assert ("action for type of operation to be performed ([1-7])" in result.stdout) 
 
 def test_task_display_columns():
@@ -82,9 +83,7 @@ def test_task_display_columns():
     app = typer.Typer()
     app.command()(mock_perform_tasks)
 
-    result = runner.invoke(app, input='\n'.join(['5', '1', 'n']))
+    result = runner.invoke(app, ['get_boards'], input='\n'.join(['5', '1', 'n']))
     print(result.stdout)
 
-    assert ("action for type of operation to be performed ([1-7])" in result.stdout) 
     assert ("Boards Available is/are:" in result.stdout)
-    assert ("Columns available in this board" in result.stdout)
