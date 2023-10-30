@@ -201,7 +201,7 @@ def get_selected_labels_list(trello, board_id):
         try: 
             all_labels = get_labels(trello, board_id)
             selected_labels = typer.prompt("\nWrite the indexes of all the labels "
-                                        f"(separated by ',')[0-{len(all_labels)}]::")
+                                            f"(separated by ',')[0-{len(all_labels)}]::")
             selected_labels = selected_labels.split(',')
             selected_labels = [int(label)-1 for label in selected_labels]
             for i, label in enumerate(selected_labels):
@@ -395,11 +395,11 @@ def add_label_existing_card(trello):
     while True:
         try:
             idx: int = int(typer.prompt(f"\nSelect the Card ([1-{len(cards)}]):"))
-            if 1>idx or idx>len(cards):
+            if 1 > idx or idx > len(cards):
                 typer.echo('Invalid input')
             else:
                 break
-        except  ValueError or IndexError:
+        except ValueError or IndexError:
             typer.echo('\nInvalid action')
 
     add_labels(trello, cards[idx-1], board_id)
@@ -411,12 +411,14 @@ def add_card_to_board(trello):
     boards = get_boards(trello)
     while True:
         try:
-            idx: int = int(typer.prompt(f"\nSelect the board ([1-{len(boards)}]):"))
-            if 1>idx or idx>len(boards):
+            idx: int = int(typer.prompt(
+                f"\nSelect the board ([1-{len(boards)}]):"
+                ))
+            if 1 > idx or idx > len(boards):
                 typer.echo('Invalid input')
             else:
                 break
-        except  ValueError or IndexError:
+        except ValueError or IndexError:
             typer.echo('\nInvalid action')
 
     board_id = boards[idx-1]
@@ -424,12 +426,14 @@ def add_card_to_board(trello):
     columns = get_columns(trello, board_id)
     while True:
         try:
-            idx: int = int(typer.prompt(f"\nSelect the column ([1-{len(columns)}]):"))
-            if 1>idx or idx>len(columns):
+            idx: int = int(typer.prompt(
+                f"\nSelect the column ([1-{len(columns)}]):"
+                ))
+            if 1 > idx or idx > len(columns):
                 typer.echo('Invalid input')
             else:
                 break
-        except  ValueError or IndexError:
+        except ValueError or IndexError:
             typer.echo('\nInvalid action')
 
     add_card(trello, columns[idx-1], board_id)
