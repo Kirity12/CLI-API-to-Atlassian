@@ -33,7 +33,7 @@ def test_welcome_message():
     assert "WELCOME TO TRELLO CLI API" in result.stdout
 
 
-def test_varify_credentials_known():
+def test_verify_credentials_known():
 
     app = typer.Typer()
     app.command()(main.verify_user_credentials)
@@ -44,7 +44,7 @@ def test_varify_credentials_known():
     assert "Status: 200" in result.stdout
 
 
-def test_varify_credentials_unkown_read():
+def test_verify_credentials_unkown_read():
 
     app = typer.Typer()
     app.command()(main.verify_user_credentials)
@@ -57,7 +57,7 @@ def test_varify_credentials_unkown_read():
     assert ("Status: 200" in result.stdout)
 
 
-def test_varify_credentials_unkown_write():
+def test_verify_credentials_unkown_write():
 
     app = typer.Typer()
     app.command()(main.verify_user_credentials)
